@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useHolidays } from '../api/holidays';
+import { TYPE_META, useCalEvents } from '../api/calendarStore';
 import { upcomingHolidays } from '../lib/holidays';
 import {
   Users, UserCheck, Umbrella, Briefcase, Cake, FileWarning, Check, X, ArrowUpRight, UserPlus, FileText, Drama, Activity as ActivityIcon,
-  CalendarPlus, Megaphone, PartyPopper,
+  CalendarPlus, Megaphone, PartyPopper, CalendarDays,
 } from 'lucide-react';
 import { useDashboard, useEmployees, useSetLeaveStatus } from '../api/hooks';
 import { Avatar, Donut, Empty, HBars, Person, Skel } from '../components/ui';
@@ -25,6 +26,7 @@ export default function Dashboard() {
   const today = todayISO();
   const upcoming = hol.data ? upcomingHolidays(today, 5) : [];
   const todayHoliday = upcoming.find((x) => x.date === today);
+  const { data: todayEvents = [], isLoading: calLoading } = useCalEvents(today, today);
   const s = data?.stats;
   const presentPct = s && s.workingToday ? Math.round((s.presentToday / s.workingToday) * 100) : 0;
 
@@ -103,6 +105,26 @@ export default function Dashboard() {
         </div>
 
         <div className="grid" style={{ alignContent: 'start' }}>
+          <div className="card">
+            <div className="card-head">
+              <div className="card-title row"><CalendarDays size={16} color="var(--accent)" /> Bu günün cədvəli</div>
+              <Link to="/calendar" className="btn btn-ghost btn-sm">Təqvim <ArrowUpRight size={14} /></Link>
+            </div>
+            <div className="mt-8">
+              {calLoading && <div style={{ padding: 20 }}><Skel h={40} /></div>}
+              {!calLoading && todayEvents.length === 0 && <Empty title="Bu gün planlaşdırılmış hadisə yoxdur" action={<Link to="/calendar?new=1" className="btn btn-sm"><CalendarPlus size={14} /> Planlaşdır</Link>} />}
+              {todayEvents.map((e) => (
+                <Link to="/calendar" key={e.id} className="list-item">
+                  <span style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: TYPE_META[e.type].color }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div className="strong small">{e.title}</div>
+                    <div className="small muted">{e.allDay ? 'Bütün gün' : `${e.start.slice(11, 16)}–${e.end.slice(11, 16)}`}{e.location ? ` · ${e.location}` : ''} · {e.participants.length} nəfər</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
           <div className="card">
             <div className="card-head"><div className="card-title row"><Cake size={16} color="var(--gold)" /> Yaxınlaşan ad günləri</div></div>
             <div className="mt-8">

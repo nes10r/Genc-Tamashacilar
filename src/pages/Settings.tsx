@@ -6,6 +6,7 @@ import { mockRoutes, resetMockDb } from '../api/mock/server';
 import { fetchHolidays, getHolidayKey, setHolidayKey } from '../api/holidays';
 import { clearHolidayCache } from '../lib/holidays';
 import { Field, useConfirm } from '../components/ui';
+import { GoogleCalendarSettings } from '../components/GoogleConnect';
 import { toast } from '../lib/toast';
 import { cx } from '../lib/utils';
 
@@ -97,6 +98,8 @@ export default function Settings() {
           </div>
           <p className="small muted mt-16" style={{ marginBottom: 0 }}>Açar olmadıqda və ya xidmət əlçatan olmadıqda Əmək Məcəlləsinin 105-ci maddəsinə əsaslanan daxili siyahı istifadə olunur.</p>
         </div>
+
+        <GoogleCalendarSettings />
 
         <div className="card card-pad">
           <div className="card-title row mb-16"><RotateCcw size={17} /> Demo məlumatlar</div>

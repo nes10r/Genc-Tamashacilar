@@ -20,6 +20,8 @@ export interface DB {
   activity: Activity[];
   readNotifications: string[];
   seq: number;
+  me?: import('../../types').UserProfile;
+  passwordChangedAt?: string;
 }
 
 function rng(seed: number) {

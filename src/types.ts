@@ -178,3 +178,38 @@ export interface SearchResult {
   vacancies: Vacancy[];
   orders: HrOrder[];
 }
+
+export type CalEventType = 'performance' | 'rehearsal' | 'shift' | 'leave' | 'other';
+
+export interface CalEvent {
+  id: ID;
+  title: string;
+  type: CalEventType;
+  allDay: boolean;
+  /** allDay: YYYY-MM-DD; əks halda YYYY-MM-DDTHH:mm (Bakı vaxtı) */
+  start: string;
+  /** allDay üçün daxil olmaqla son gün */
+  end: string;
+  location?: string;
+  description?: string;
+  participants: ID[];
+  recurringEventId?: string;
+  htmlLink?: string;
+  leaveId?: string;
+  source: 'google' | 'local' | 'portal' | 'holiday';
+  pending?: boolean;
+}
+
+export type CalEventInput = Omit<CalEvent, 'id' | 'source'> & { id?: ID; repeatWeeks?: number };
+
+export interface UserProfile {
+  firstName: string;
+  lastName: string;
+  role: string;
+  position: string;
+  email: string;
+  phone: string;
+  avatarColor: string;
+  notify: { leaveRequests: boolean; contracts: boolean; birthdays: boolean; candidates: boolean; email: boolean };
+  updatedAt?: string;
+}

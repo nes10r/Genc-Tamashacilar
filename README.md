@@ -45,3 +45,15 @@ Backend realizə etməli olduğu endpoint-lərin tam siyahısı portalın **Ayar
 - Canlı rejimdə: `GET {API}/holidays?country=AZ&year=YYYY` — backend holidayapi.com-a proksi etməlidir ki, açar brauzerə çıxmasın.
 - Cavab 7 gün keşlənir, ingiliscə adlar azərbaycancaya tərcümə olunur, `observed` (köçürülmüş gün) nəzərə alınır.
 - Açar olmadıqda və ya xəta baş verdikdə (401/402/429, şəbəkə, CORS) Əmək Məcəlləsinin 105-ci maddəsinə əsaslanan daxili siyahı istifadə olunur. Ramazan və Qurban bayramlarının tarixləri bu siyahıda təxminidir.
+
+### Təqvim — Google Calendar API (pulsuz, standart kvota)
+
+[src/api/google/](src/api/google/) və [src/api/calendarStore.ts](src/api/calendarStore.ts):
+
+- Tamaşa, məşq, iş növbəsi hadisələri **Google Calendar API v3**-də saxlanılır; təsdiqlənmiş məzuniyyətlər bir kliklə sinxronlaşdırılır.
+- Giriş Google Identity Services (OAuth token) ilə tam brauzerdə olur — server, API açarı və client secret lazım deyil.
+- İcazələr: `calendar.app.created` (tətbiqin yaratdığı “GTT — Teatr təqvimi”) və `calendar.events` (mövcud təqvimdən istifadə üçün).
+- Kvotaya qənaət: yalnız görünən tarix aralığı sorğulanır, `fields` ilə cavab kiçildilir, keşləmə, 403 rateLimit / 429 / 5xx üçün eksponensial təkrar.
+- Google qoşulmayana qədər təqvim lokal rejimdə işləyir. `.ics` ixracı Outlook/Apple Calendar üçün.
+
+Pulsuz Client ID: Google Cloud Console → yeni layihə → Google Calendar API-nı aktiv et → OAuth consent screen (External, Testing, test istifadəçiləri) → Credentials → OAuth client ID (Web application) → *Authorized JavaScript origins*: `http://localhost:5173` və istehsal domeni. Client ID-ni portalda **Ayarlar → Google Calendar** və ya `VITE_GOOGLE_CLIENT_ID` ilə daxil edin.

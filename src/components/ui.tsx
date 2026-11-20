@@ -74,9 +74,9 @@ export function Toaster() {
 
 /* ---------- Avatar ---------- */
 const AV_COLORS = ['#8c1c2b', '#b8862f', '#5b3a8c', '#2f7d6d', '#2b5c9e', '#b4572a', '#6b7a2a', '#a3376f', '#4a5560'];
-export function Avatar({ e, size }: { e?: Pick<Employee, 'firstName' | 'lastName' | 'id'>; size?: 'lg' | 'sm' | 'xs' }) {
+export function Avatar({ e, size, color }: { e?: Pick<Employee, 'firstName' | 'lastName' | 'id'>; size?: 'lg' | 'sm' | 'xs'; color?: string }) {
   const idx = e ? [...e.id].reduce((s, c) => s + c.charCodeAt(0), 0) % AV_COLORS.length : 0;
-  return <span className={cx('avatar', size)} style={{ background: AV_COLORS[idx] }} title={fullName(e)}>{initials(e)}</span>;
+  return <span className={cx('avatar', size)} style={{ background: color ?? AV_COLORS[idx] }} title={fullName(e)}>{initials(e)}</span>;
 }
 export function Person({ e, sub }: { e?: Employee; sub?: ReactNode }) {
   return (

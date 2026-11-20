@@ -5,7 +5,7 @@
  */
 import type {
   AttendanceRecord, Candidate, DashboardData, Employee, HrOrder, LeaveRequest, Notification,
-  PayrollRun, Activity,
+  PayrollRun, Activity, UserProfile,
 } from '../../types';
 import { addDays, diffDays, norm, todayISO, parseISO, pad, countWorkDays } from '../../lib/utils';
 import { createSeed, genAttendance, isoNow, type DB } from './seed';
@@ -364,6 +364,29 @@ route('POST', '/notifications/read', 'Bildirişləri oxunmuş qeyd et ({ids})', 
   return null;
 });
 route('GET', '/activity', 'Son fəaliyyətlər', () => db.activity);
+
+/* ---------------- Current user (profil) ---------------- */
+const DEFAULT_ME: UserProfile = {
+  firstName: 'Kadrlar', lastName: 'Şöbəsi', role: 'Administrator', position: 'Kadrlar şöbəsinin müdiri',
+  email: 'hr@gtt.az', phone: '+994 12 000 00 00', avatarColor: '#5b3a8c',
+  notify: { leaveRequests: true, contracts: true, birthdays: true, candidates: true, email: false },
+};
+route('GET', '/me', 'Cari istifadəçinin profili', () => ({ ...DEFAULT_ME, ...db.me, notify: { ...DEFAULT_ME.notify, ...db.me?.notify } }));
+route('PUT', '/me', 'Profili yenilə', (_, __, b: any) => {
+  required(b, ['firstName', 'lastName', 'email']);
+  if (!/^\S+@\S+\.\S+$/.test(b.email)) throw new HttpError(422, 'E-poçt ünvanı düzgün deyil');
+  const { role: _role, ...rest } = b; // rolu istifadəçi özü dəyişə bilməz
+  db.me = { ...DEFAULT_ME, ...db.me, ...rest, updatedAt: isoNow() };
+  log('İstifadəçi profili yeniləndi', 'system');
+  return db.me;
+});
+route('POST', '/me/password', 'Şifrəni dəyiş ({current, next})', (_, __, b: any) => {
+  required(b, ['current', 'next']);
+  if (String(b.next).length < 8) throw new HttpError(422, 'Yeni şifrə ən azı 8 simvol olmalıdır');
+  if (b.current === b.next) throw new HttpError(422, 'Yeni şifrə köhnəsindən fərqli olmalıdır');
+  db.passwordChangedAt = isoNow();
+  return { ok: true, changedAt: db.passwordChangedAt };
+});
 
 /* ---------------- Dispatcher ---------------- */
 export const mockRoutes = routes.map(({ method, pattern, doc }) => ({ method, pattern, doc }));

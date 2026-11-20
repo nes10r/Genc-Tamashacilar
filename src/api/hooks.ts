@@ -3,7 +3,7 @@ import { http, qs } from './client';
 import { toast } from '../lib/toast';
 import type {
   AttendanceRecord, Candidate, DashboardData, Department, Employee, Evaluation, HrOrder, LeaveRequest, Notification,
-  PayrollRun, SearchResult, Training, Vacancy, Activity,
+  PayrollRun, SearchResult, Training, Vacancy, Activity, UserProfile,
 } from '../types';
 
 declare module '@tanstack/react-query' {
@@ -111,3 +111,8 @@ export const useDeleteTraining = () => useMut((id: string) => http.del(`/trainin
 export const useCreateEvaluation = () => useMut((e: Partial<Evaluation>) => http.post('/evaluations', e), ['evaluations'], 'Qiymətləndirmə əlavə edildi');
 
 export const useMarkNotificationsRead = () => useMut((ids: string[]) => http.post('/notifications/read', { ids }), ['notifications']);
+
+export const useMe = () => useQuery({ queryKey: ['me'], queryFn: () => http.get<UserProfile>('/me'), staleTime: 300_000 });
+export const useSaveMe = () => useMut((p: Partial<UserProfile>) => http.put<UserProfile>('/me', p), ['me'], 'Profil yadda saxlanıldı');
+export const useChangePassword = () =>
+  useMut((v: { current: string; next: string }) => http.post('/me/password', v), [], 'Şifrə uğurla dəyişdirildi');

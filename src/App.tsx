@@ -16,6 +16,7 @@ import Orders from './pages/Orders';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Holidays from './pages/Holidays';
+import CalendarPage from './pages/Calendar';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
               <Route path="holidays" element={<Holidays />} />
+              <Route path="calendar" element={<CalendarPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

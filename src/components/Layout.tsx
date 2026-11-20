@@ -2,15 +2,16 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Building2, CalendarCheck, Umbrella, UserPlus, GraduationCap, Wallet, FileText, BarChart3,
-  Settings, Search, Bell, Moon, Sun, Drama, Menu, Cake, FileWarning, UserRoundPlus, CheckCheck, Server, CornerDownLeft, Plus, PartyPopper,
+  Settings, Search, Bell, Moon, Sun, Drama, Menu, Cake, FileWarning, UserRoundPlus, CheckCheck, Server, CornerDownLeft, Plus, PartyPopper, CalendarDays,
 } from 'lucide-react';
-import { useLeaves, useMarkNotificationsRead, useNotifications, useSearch } from '../api/hooks';
+import { useLeaves, useMarkNotificationsRead, useMe, useNotifications, useSearch } from '../api/hooks';
 import { getApiConfig } from '../api/client';
 import { Avatar, useDebounced } from './ui';
+import UserMenu from './UserMenu';
 import { cx, fullName, relTime } from '../lib/utils';
 
 const NAV = [
-  { group: 'Əsas', items: [{ to: '/', label: 'İdarə paneli', icon: LayoutDashboard }] },
+  { group: 'Əsas', items: [{ to: '/', label: 'İdarə paneli', icon: LayoutDashboard }, { to: '/calendar', label: 'Təqvim', icon: CalendarDays }] },
   {
     group: 'Kadrlar', items: [
       { to: '/employees', label: 'İşçilər', icon: Users },
@@ -116,13 +117,7 @@ export default function Layout() {
             <button className="icon-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label="Tema">
               {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
             </button>
-            <div className="row" style={{ marginLeft: 6, gap: 10 }}>
-              <Avatar e={{ id: 'hr', firstName: 'Kadrlar', lastName: 'Şöbəsi' }} size="sm" />
-              <div className="small" style={{ lineHeight: 1.2 }}>
-                <div className="strong">Kadrlar şöbəsi</div>
-                <div className="muted">Administrator</div>
-              </div>
-            </div>
+            <UserMenu theme={theme} onTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
           </div>
         </header>
         <main className="content">
@@ -137,7 +132,10 @@ export default function Layout() {
 function Notifications() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { data = [] } = useNotifications();
+  const { data: all = [] } = useNotifications();
+  const { data: me } = useMe();
+  const KIND = { leave: 'leaveRequests', contract: 'contracts', birthday: 'birthdays', candidate: 'candidates' } as const;
+  const data = all.filter((n) => !me || n.kind === 'system' || me.notify[KIND[n.kind as keyof typeof KIND]] !== false);
   const mark = useMarkNotificationsRead();
   const nav = useNavigate();
   const unread = data.filter((n) => !n.read);
@@ -197,6 +195,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     const actions = [
       { to: '/employees?new=1', label: 'Yeni işçi əlavə et', icon: Plus },
       { to: '/leaves?new=1', label: 'Məzuniyyət sorğusu yarat', icon: Plus },
+      { to: '/calendar?new=1', label: 'Məşq / tamaşa planlaşdır', icon: Plus },
       { to: '/orders?new=1', label: 'Yeni əmr hazırla', icon: Plus },
       { to: '/recruitment?new=1', label: 'Vakansiya elan et', icon: Plus },
     ].filter((p) => !q || p.label.toLowerCase().includes(q.toLowerCase()));
