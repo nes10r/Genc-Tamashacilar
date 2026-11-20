@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Building2, CalendarCheck, Umbrella, UserPlus, GraduationCap, Wallet, FileText, BarChart3,
-  Settings, Search, Bell, Moon, Sun, Drama, Menu, Cake, FileWarning, UserRoundPlus, CheckCheck, Server, CornerDownLeft, Plus, PartyPopper, CalendarDays,
+  Settings, Search, Bell, Moon, Sun, Drama, Menu, Cake, FileWarning, UserRoundPlus, CheckCheck, Server, CornerDownLeft, Plus, PartyPopper, CalendarDays, X,
 } from 'lucide-react';
 import { useLeaves, useMarkNotificationsRead, useMe, useNotifications, useSearch } from '../api/hooks';
 import { getApiConfig } from '../api/client';
@@ -55,7 +55,13 @@ export default function Layout() {
   const [theme, setTheme] = useTheme();
   const [cmdOpen, setCmdOpen] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('gtt-sidebar') === 'collapsed'; } catch { return false; } });
   const loc = useLocation();
+  const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+  const toggleMenu = () => {
+    if (isMobile()) setMenu((o) => !o);
+    else setCollapsed((c) => { const n = !c; try { localStorage.setItem('gtt-sidebar', n ? 'collapsed' : 'open'); } catch { /* */ } return n; });
+  };
   const pending = useLeaves({ status: 'gözləyir' }).data?.length ?? 0;
   const [apiMode, setApiMode] = useState(getApiConfig().mode);
 
@@ -64,19 +70,24 @@ export default function Layout() {
     const h = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmdOpen((o) => !o); }
       if (e.key === '/' && !(e.target as HTMLElement).closest('input,textarea,select')) { e.preventDefault(); setCmdOpen(true); }
+      if (e.key === 'Escape') setMenu(false);
     };
+    const mq = window.matchMedia('(max-width: 900px)');
+    const onMq = () => { if (!mq.matches) setMenu(false); };
+    mq.addEventListener('change', onMq);
     const c = () => setApiMode(getApiConfig().mode);
     window.addEventListener('keydown', h);
     window.addEventListener('api-config', c);
-    return () => { window.removeEventListener('keydown', h); window.removeEventListener('api-config', c); };
+    return () => { window.removeEventListener('keydown', h); window.removeEventListener('api-config', c); mq.removeEventListener('change', onMq); };
   }, []);
 
   return (
-    <div className="app">
-      <aside className={cx('sidebar', menu && 'open')}>
+    <div className={cx('app', collapsed && 'collapsed')}>
+      <aside id="sidebar" className={cx('sidebar', menu && 'open')} aria-label="Əsas menyu">
         <div className="brand">
           <div className="brand-mark"><Drama size={22} /></div>
-          <div>
+          <button className="icon-btn sm sidebar-close" onClick={() => setMenu(false)} aria-label="Menyunu bağla"><X size={18} /></button>
+          <div className="brand-text">
             <div className="brand-title">Gənc Tamaşaçılar<br />Teatrı</div>
             <div className="brand-sub">HR Portal</div>
           </div>
@@ -85,26 +96,26 @@ export default function Layout() {
           <div key={g.group}>
             <div className="nav-group">{g.group}</div>
             {g.items.map((it) => (
-              <NavLink key={it.to} to={it.to} end={it.to === '/'} className={({ isActive }) => cx('nav-link', isActive && 'active')}>
-                <it.icon size={18} /> {it.label}
+              <NavLink key={it.to} to={it.to} end={it.to === '/'} title={collapsed ? it.label : undefined} className={({ isActive }) => cx('nav-link', isActive && 'active')}>
+                <it.icon size={18} /> <span className="nav-label">{it.label}</span>
                 {'badge' in it && pending > 0 && <span className="nav-badge">{pending}</span>}
               </NavLink>
             ))}
           </div>
         ))}
         <div style={{ marginTop: 8 }}>
-          <NavLink to="/settings" className={({ isActive }) => cx('nav-link', isActive && 'active')}><Settings size={18} /> Ayarlar və API</NavLink>
+          <NavLink to="/settings" title={collapsed ? 'Ayarlar və API' : undefined} className={({ isActive }) => cx('nav-link', isActive && 'active')}><Settings size={18} /> <span className="nav-label">Ayarlar və API</span></NavLink>
         </div>
         <div className="sidebar-foot">
           <div className="row"><Server size={13} /> {apiMode === 'mock' ? 'Demo API rejimi' : 'Canlı API'}</div>
           <div style={{ marginTop: 4 }}>v1.0 · {new Date().getFullYear()}</div>
         </div>
       </aside>
-      {menu && <div className="overlay" style={{ zIndex: 55, background: 'rgba(0,0,0,.35)' }} onClick={() => setMenu(false)} />}
+      {menu && <div className="sidebar-backdrop" onClick={() => setMenu(false)} aria-hidden="true" />}
 
       <div className="main">
         <header className="topbar">
-          <button className="icon-btn menu-btn" onClick={() => setMenu(true)} aria-label="Menyu"><Menu size={20} /></button>
+          <button className="icon-btn menu-btn" onClick={toggleMenu} aria-controls="sidebar" aria-expanded={menu || !collapsed} aria-label={collapsed ? 'Menyunu genişləndir' : 'Menyunu yığ'} title="Menyu"><Menu size={20} /></button>
           <button className="search-trigger" onClick={() => setCmdOpen(true)}>
             <Search size={16} /> İşçi, vakansiya və ya əmr axtarın…
             <span className="kbd">Ctrl K</span>
